@@ -1,0 +1,43 @@
+version: '0.1'
+
+services:
+  postgres:
+    image: postgres:${POSTGRES_IMAGE_VERSION}
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    expose:
+      - "5432"
+    ports:
+      # necessary for local backend development
+      - "5432:5432"
+    volumes:
+      - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:Z
+      
+      
+  pgadmin4:
+    restart: unless-stopped
+    image: dpage/pgadmin4
+    ports:
+      - "5433:80"
+    volumes:
+      - ./pgadmin4/servers.json:/pgadmin4/servers.json:Z
+      - ./pgadmin4/pgpassfile.txt:/tmp/pgpassfile.txt:Z
+    environment:
+      PGADMIN_DEFAULT_PASSWORD: postgres
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      # not possible in desktop-mode
+      #SCRIPT_NAME: /pgadmin4
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    entrypoint: >
+      /bin/sh -c "
+      mkdir -p -m 700 /var/lib/pgadmin/storage/pgadmin4_pgadmin.org/;
+      chown -R pgadmin:pgadmin /var/lib/pgadmin/storage/pgadmin4_pgadmin.org/;
+      cp /tmp/pgpassfile.txt /var/lib/pgadmin/storage/pgadmin4_pgadmin.org/pgpassfile.txt;
+      chown pgadmin:pgadmin /var/lib/pgadmin/storage/pgadmin4_pgadmin.org/pgpassfile.txt;
+      chmod 0600 /var/lib/pgadmin/storage/pgadmin4_pgadmin.org/pgpassfile.txt;
+      /entrypoint.sh;
+      "
+    depends_on:
+      - postgres
