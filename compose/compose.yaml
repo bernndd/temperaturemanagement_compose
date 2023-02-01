@@ -15,6 +15,24 @@ services:
       - ./postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:Z
       
       
+      
+  node-red:
+    #image: nodered/${NODE_RED_IMAGE}:${NODE_RED_IMAGE_VERSION}
+    image: nodered/node-red:latest
+    environment:
+      - TZ=Europe/Amsterdam
+    ports:
+      - "1880:1880"
+    networks:
+      - node-red-net
+    volumes:
+      - node-red-data:/data
+    depends_on:
+      - postgres
+      
+      
+      
+      
   pgadmin4:
     restart: unless-stopped
     image: dpage/pgadmin4
@@ -41,3 +59,11 @@ services:
       "
     depends_on:
       - postgres
+
+
+
+volumes:
+  node-red-data:
+
+networks:
+  node-red-net:
